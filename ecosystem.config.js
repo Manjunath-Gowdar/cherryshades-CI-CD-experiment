@@ -1,6 +1,6 @@
 module.exports = {
   apps : [{
-    name: "cherryshade-pm2",
+    name: "cherryshades-pm2",
     script: "./backend/server.js",
     env: {
       NODE_ENV: "production",
