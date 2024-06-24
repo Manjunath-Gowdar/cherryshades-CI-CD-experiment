@@ -1,11 +1,15 @@
-import path from 'path';
+const path = require('path')
 
-export default {
-  apps: [{
-    name: "cherryshades-pm2",
-    script: "./backend/server.js",
-    autorestart: true,
-   
-    // More configuration options as needed
-  }],
-};
+module.exports = {
+  apps: [
+    {
+      name: 'cherryshades-pm2',
+      script: './backend/server.js',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+
+      // More configuration options as needed
+    },
+  ],
+}
