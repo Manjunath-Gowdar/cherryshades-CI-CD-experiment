@@ -44,6 +44,10 @@ jobs:
         run: |
           echo "$SSH_KEY" > deploy_key.pem
           chmod 600 deploy_key.pem
+
+        mkdir -p ~/.ssh
+        ssh-keyscan ${EC2_HOST} >> ~/.ssh/known_hosts
+
           scp -i deploy_key.pem -r . ubuntu@${EC2_HOST}:/home/ubuntu/cherryshades-test/
           ssh -i deploy_key.pem ubuntu@${EC2_HOST} << EOF
             cd /home/ubuntu/cherryshades-test
