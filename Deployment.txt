@@ -18,4 +18,5 @@ cyclic.sh has stoped all its service from may 2024, to i have shifted all mern s
   ####@render.com add ur .env credentials apart from "NODE_ENV = development" (dont add this).
 
 -status check
- test
+ test 2
+ 
