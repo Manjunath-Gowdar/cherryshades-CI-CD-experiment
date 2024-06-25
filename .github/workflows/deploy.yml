@@ -2,64 +2,63 @@ name: Deploy MERN Stack
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ['master']
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-    - name: Install backend dependencies
-      run: |
-        npm install
-
-    - name: Install frontend dependencies and build
-      run: |
-        cd frontend
-        npm install
-        npm run build
-
-    - name: Install PM2
-      run: npm install pm2 -g
-
-      
-    - name: Deploy to EC2
-      env:
-        SSH_KEY: ${{ secrets.SSH_KEY }}
-        EC2_USER: ubuntu
-        EC2_HOST: 100.29.80.144
-        PM2_NAME: cherryshades-pm2
-        NODE_ENV: ${{ secrets.NODE_ENV }}
-        PORT: ${{ secrets.PORT }}
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
-      run: |
-        pm2 restart ./backend/server.js --name "cherryshades-pm2"
-        echo "$SSH_KEY" > deploy_key.pem
-        chmod 600 deploy_key.pem
-        scp -i deploy_key.pem -r . ubuntu@${EC2_HOST}:/home/ubuntu/cherryshades-test/
-        ssh -i deploy_key.pem ubuntu@${EC2_HOST} << EOF
-          cd /home/ubuntu/cherryshades-test
-          echo "NODE_ENV=${NODE_ENV}" >> .env
-          echo "PORT=${PORT}" >> .env
-          echo "MONGO_URI=${MONGO_URI}" >> .env
-          echo "JWT_SECRET=${JWT_SECRET}" >> .env
-          echo "PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" >> .env
+      - name: Install backend dependencies
+        run: |
           npm install
+
+      - name: Install frontend dependencies and build
+        run: |
           cd frontend
           npm install
           npm run build
-          cd ..
-          pm2 restart ${PM2_NAME} || pm2 start /home/ubuntu/cherryshades-test/backend/server.js --name ${PM2_NAME}
-          exit
-        EOF
-      shell: bash
+
+      - name: Install PM2
+        run: npm install pm2 -g
+
+      - name: Deploy to EC2
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          EC2_USER: ubuntu
+          EC2_HOST: 100.29.80.144
+          PM2_NAME: cherryshades-pm2
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          PORT: ${{ secrets.PORT }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+        run: |
+          echo "$SSH_KEY" > deploy_key.pem
+          chmod 600 deploy_key.pem
+          scp -i deploy_key.pem -r . ubuntu@${EC2_HOST}:/home/ubuntu/cherryshades-test/
+          ssh -i deploy_key.pem ubuntu@${EC2_HOST} << EOF
+            cd /home/ubuntu/cherryshades-test
+            echo "NODE_ENV=${NODE_ENV}" >> .env
+            echo "PORT=${PORT}" >> .env
+            echo "MONGO_URI=${MONGO_URI}" >> .env
+            echo "JWT_SECRET=${JWT_SECRET}" >> .env
+            echo "PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" >> .env
+            npm install
+            cd frontend
+            npm install
+            npm run build
+            cd ..
+            pm2 delete ${PM2_NAME} || true
+            pm2 start /home/ubuntu/cherryshades-test/backend/server.js --name ${PM2_NAME} --update-env --env ${NODE_ENV} -- --env production
+            exit
+          EOF
+        shell: bash
