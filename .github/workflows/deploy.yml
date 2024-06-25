@@ -53,19 +53,19 @@ jobs:
           scp -i deploy_key.pem -r * $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
 
           ssh -i deploy_key.pem $EC2_USER@$EC2_HOST <<-EOF
-          cd /home/ubuntu/cherryshades-test
-          echo "NODE_ENV=${NODE_ENV}" > .env
-          echo "PORT=${PORT}" >> .env
-          echo "MONGO_URI=${MONGO_URI}" >> .env
-          echo "JWT_SECRET=${JWT_SECRET}" >> .env
-          echo "PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" >> .env
-          npm install
-          cd frontend
-          npm install
-          npm run build
-          cd ..
-          pm2 stop ${PM2_NAME} || true
-          pm2 delete ${PM2_NAME} || true
-          pm2 start server.js --name ${PM2_NAME}
-        EOF
+            cd /home/ubuntu/cherryshades-test
+            echo "NODE_ENV=${NODE_ENV}" > .env
+            echo "PORT=${PORT}" >> .env
+            echo "MONGO_URI=${MONGO_URI}" >> .env
+            echo "JWT_SECRET=${JWT_SECRET}" >> .env
+            echo "PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" >> .env
+            npm install
+            cd frontend
+            npm install
+            npm run build
+            cd ..
+            pm2 stop ${PM2_NAME} || true
+            pm2 delete ${PM2_NAME} || true
+            pm2 start server.js --name ${PM2_NAME}
+          EOF
         shell: bash
