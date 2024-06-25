@@ -18,8 +18,7 @@ jobs:
         node-version: '14'
 
     - name: Install backend dependencies
-      run: |
-        npm install
+      run: npm install
 
     - name: Install frontend dependencies and build
       run: |
@@ -42,8 +41,7 @@ jobs:
       shell: bash
 
     - name: Verify SSH Key
-      run: |
-        ssh-keygen -lf deploy_key.pem
+      run: ssh-keygen -lf deploy_key.pem
 
     - name: Add EC2 Host to Known Hosts
       run: |
@@ -63,9 +61,12 @@ jobs:
     - name: List Directory Contents
       run: ls -al
 
+    - name: Install rsync
+      run: sudo apt-get install -y rsync
+
     - name: Copy Files to EC2
       run: |
-        scp -v -i deploy_key.pem -r * $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
+        rsync -avz --exclude-from='.scpignore' -e "ssh -i deploy_key.pem" . $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
       shell: bash
 
     - name: Deploy Application
@@ -87,6 +88,7 @@ jobs:
           pm2 start server.js --name ${PM2_NAME}
         EOF
       shell: bash
+
     env:
       SSH_KEY: ${{ secrets.SSH_KEY }}
       EC2_USER: ubuntu
