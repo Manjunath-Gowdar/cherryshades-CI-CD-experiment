@@ -30,16 +30,6 @@ jobs:
       - name: Install PM2
         run: npm install pm2 -g
 
-      - name: Add SSH key
-        run: |
-          echo "$SSH_KEY" > deploy_key.pem
-          chmod 600 deploy_key.pem
-
-      - name: Add EC2 host to known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
       - name: Deploy to EC2
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
@@ -52,6 +42,12 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
         run: |
+          echo "$SSH_KEY" > deploy_key.pem
+          chmod 600 deploy_key.pem
+
+          mkdir -p ~/.ssh
+          ssh-keyscan ${EC2_HOST} >> ~/.ssh/known_hosts
+
           scp -i deploy_key.pem -r . $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
           ssh -i deploy_key.pem $EC2_USER@$EC2_HOST << 'EOF'
             cd /home/ubuntu/cherryshades-test
