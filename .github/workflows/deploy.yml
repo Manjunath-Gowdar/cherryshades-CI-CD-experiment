@@ -28,6 +28,10 @@ jobs:
         npm install
         npm run build
 
+    - name: Install PM2
+      run: npm install pm2 -g
+
+      
     - name: Deploy to EC2
       env:
         SSH_KEY: ${{ secrets.SSH_KEY }}
@@ -40,7 +44,7 @@ jobs:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
       run: |
-        pm2 start ./backend/server.js --name "cherryshade-pm2"
+        pm2 restart ./backend/server.js --name "cherryshades-pm2"
         echo "$SSH_KEY" > deploy_key.pem
         chmod 600 deploy_key.pem
         scp -i deploy_key.pem -r . ubuntu@${EC2_HOST}:/home/ubuntu/cherryshades-test/
