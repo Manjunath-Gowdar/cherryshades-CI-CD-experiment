@@ -2,8 +2,7 @@ name: Deploy MERN Stack
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "master" ]
 
 jobs:
   deploy:
