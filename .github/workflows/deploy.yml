@@ -85,7 +85,7 @@ jobs:
           cd ..
           pm2 stop ${PM2_NAME} || true
           pm2 delete ${PM2_NAME} || true
-          pm2 start server.js --name ${PM2_NAME}
+          pm2 start /home/ubuntu/cherryshades-test/server.js --name ${PM2_NAME}
         EOF
       shell: bash
 
