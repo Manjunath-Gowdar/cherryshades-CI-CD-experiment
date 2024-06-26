@@ -18,8 +18,7 @@ jobs:
         node-version: '14'
 
     - name: Install backend dependencies
-      run: |
-        npm install
+      run: npm install
 
     - name: Install frontend dependencies and build
       run: |
