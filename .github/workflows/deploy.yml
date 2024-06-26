@@ -49,6 +49,7 @@ jobs:
       run: |
         echo "$SSH_KEY" > deploy_key.pem
         chmod 600 deploy_key.pem
+        ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "sudo mkdir -p /home/ubuntu/cherryshades-test && sudo chown -R $EC2_USER:$EC2_USER /home/ubuntu/cherryshades-test"
         rsync -avz --exclude 'node_modules' --exclude '.git' --exclude '.github' -e "ssh -i deploy_key.pem" . $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST << EOF
           cd /home/ubuntu/cherryshades-test
