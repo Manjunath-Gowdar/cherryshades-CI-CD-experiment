@@ -30,18 +30,9 @@ jobs:
     - name: Install PM2
       run: npm install pm2 -g
 
-    - name: Prepare SSH Key
+    - name: Add EC2 Host to known_hosts
       run: |
-        echo "$SSH_KEY" > deploy_key.pem
-        chmod 600 deploy_key.pem
-
-    - name: Set permissions on EC2 instance
-      env:
-        SSH_KEY: ${{ secrets.SSH_KEY }}
-        EC2_USER: ubuntu
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        ssh -i deploy_key.pem $EC2_USER@$EC2_HOST 'sudo chown -R ubuntu:ubuntu /home/ubuntu/cherryshades-test && sudo chmod -R 755 /home/ubuntu/cherryshades-test'
+        ssh-keyscan ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to EC2
       env:
@@ -55,7 +46,9 @@ jobs:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
       run: |
-        scp -i deploy_key.pem -r . $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
+        echo "$SSH_KEY" > deploy_key.pem
+        chmod 600 deploy_key.pem
+        rsync -avz -e "ssh -i deploy_key.pem" . $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST << EOF
           cd /home/ubuntu/cherryshades-test
           echo "NODE_ENV=${NODE_ENV}" >> .env
@@ -69,6 +62,8 @@ jobs:
           npm run build
           cd ..
           pm2 restart ${PM2_NAME} || pm2 start /home/ubuntu/cherryshades-test/backend/server.js --name ${PM2_NAME}
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/cherryshades-test
+          sudo chmod -R 755 /home/ubuntu/cherryshades-test
           exit
         EOF
       shell: bash
