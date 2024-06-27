@@ -29,6 +29,12 @@ jobs:
       run: npm install
       working-directory: cherryshades-test
 
+    - name: Adjust permissions for build directory
+      run: |
+        sudo chown -R ubuntu:ubuntu /home/ubuntu/cherryshades-test/frontend/build
+        sudo chmod -R 755 /home/ubuntu/cherryshades-test/frontend/build
+      shell: bash
+
     - name: Install frontend dependencies and build
       run: |
         cd frontend
