@@ -29,16 +29,16 @@ jobs:
       run: npm install
       working-directory: cherryshades-test
 
-    - name: Install frontend dependencies and build
+    - name: Install frontend dependencies a
       run: |
         cd frontend
         npm install
       working-directory: cherryshades-test
     
-    - name: ls check
+    - name: ls check and build
       run: |
-        ls
         ls -a
+        npm run build
       
     - name: Install PM2
       run: npm install pm2 -g
