@@ -36,7 +36,7 @@ const HomeScreen = ({ match }) => {
         </Link>
       )}
       <h1 style={{ paddingTop: '20px', marginBottom: '0px' }}>
-        Latest Products, test
+        Latest Products, test 1
       </h1>
       {loading ? (
         <Loader />

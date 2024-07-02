@@ -9,36 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
-
-    - name: Install Git
-      run: sudo apt-get install -y git
-
-    - name: Clone Repository
-      run: |
-        git clone https://github.com/Manjunath-Gowdar/cherryshades-test.git
-        cd cherryshades-test
-
-    - name: Install backend dependencies
-      run: npm install
-      working-directory: cherryshades-test
-
-    - name: Install frontend dependencies and build
-      run: |
-        cd frontend
-        npm install
-        npm run build
-      working-directory: cherryshades-test
-
-    - name: Install PM2
-      run: npm install pm2 -g
-
     - name: Prepare SSH Key
       run: |
         echo "$SSH_KEY" > deploy_key.pem
@@ -63,16 +33,10 @@ jobs:
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "echo 'SSH connection successful!'"
       shell: bash
 
-    - name: Create Remote Directory
+    - name: Clone Repository on EC2
       run: |
-        ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "mkdir -p /home/ubuntu/cherryshades-test"
+        ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "git clone https://github.com/Manjunath-Gowdar/cherryshades-test.git /home/ubuntu/cherryshades-test"
       shell: bash
-
-    - name: List Directory Contents
-      run: ls -al
-
-    - name: Install rsync
-      run: sudo apt-get install -y rsync
 
     - name: Copy Files to EC2
       run: |
@@ -84,7 +48,7 @@ jobs:
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "sudo chown -R $EC2_USER:$EC2_USER /home/ubuntu/cherryshades-test/frontend/build && sudo chmod -R 755 /home/ubuntu/cherryshades-test/frontend/build"
       shell: bash
 
-    - name: Deploy Application
+    - name: Deploy Application on EC2
       run: |
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST <<-EOF
           cd /home/ubuntu/cherryshades-test
@@ -93,10 +57,17 @@ jobs:
           echo "MONGO_URI=${MONGO_URI}" >> .env
           echo "JWT_SECRET=${JWT_SECRET}" >> .env
           echo "PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}" >> .env
+          
+          # Install backend dependencies
+          cd backend
           npm install
-          cd frontend
+          
+          # Install frontend dependencies and build
+          cd ../frontend
           npm install
           npm run build
+          
+          # Manage application process with PM2
           cd ..
           pm2 stop ${PM2_NAME} || true
           pm2 delete ${PM2_NAME} || true
