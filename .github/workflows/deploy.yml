@@ -106,9 +106,9 @@ jobs:
 
     env:
       SSH_KEY: ${{ secrets.SSH_KEY }}
-      EC2_USER: ${{ secrets.EC2_USER}}
+      EC2_USER: ubuntu
       EC2_HOST: ${{ secrets.EC2_HOST }}
-      PM2_NAME: ${{ secrets.PM2_NAME }}
+      PM2_NAME: cherryshades-pm2
       NODE_ENV: ${{ secrets.NODE_ENV }}
       PORT: ${{ secrets.PORT }}
       MONGO_URI: ${{ secrets.MONGO_URI }}
