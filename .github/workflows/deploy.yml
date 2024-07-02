@@ -1,66 +1,64 @@
-name: Deploy Process of Cherryshades-test
+name: Deploy Process of Cherryshades
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js and npm
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+      - name: Set up Node.js and npm
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-    - name: Install backend dependencies
-      run: |
-        cd cherryshades-test
-        npm ci
-      working-directory: cherryshades-test
-
-    - name: Install frontend dependencies and build
-      run: |
-        cd cherryshades-test/frontend
-        npm ci
-        npm run build
-      working-directory: cherryshades-test
-
-    - name: Prepare SSH Key and Add to SSH Agent
-      run: |
-        echo "$SSH_KEY" > cherryshades-test/deploy_key.pem
-        chmod 600 cherryshades-test/deploy_key.pem
-        eval $(ssh-agent -s)
-        ssh-add cherryshades-test/deploy_key.pem
-      shell: bash
-
-    - name: Add EC2 Host to Known Hosts
-      run: |
-        mkdir -p ~/.ssh
-        ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
-
-    - name: Deploy Application
-      run: |
-        rsync -avz --exclude-from='cherryshades-test/.scpignore' -e "ssh -i cherryshades-test/deploy_key.pem" cherryshades-test/ $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades-test/
-        ssh -i cherryshades-test/deploy_key.pem $EC2_USER@$EC2_HOST <<-EOF
-          cd /home/ubuntu/cherryshades-test
-          echo "NODE_ENV=${NODE_ENV}" > .env
-          echo "PORT=${PORT}" >> .env
-          echo "MONGO_URI=${MONGO_URI}" >> .env
-          echo "JWT_SECRET=${JWT_SECRET}" >> .env
+      - name: Install backend dependencies
+        run: |
+          
           npm ci
+        working-directory: cherryshades/backend
+
+      - name: Install frontend dependencies and build
+        run: |
           cd frontend
           npm ci
           npm run build
-          pm2 stop ${PM2_NAME} || true
-          pm2 delete ${PM2_NAME} || true
-          pm2 start /home/ubuntu/cherryshades-test/backend/server.js --name ${PM2_NAME}
-        EOF
-      shell: bash
+        working-directory: cherryshades/frontend
+
+      - name: Prepare SSH Key and Add to SSH Agent
+        run: |
+          echo "$SSH_KEY" > deploy_key.pem
+          chmod 600 deploy_key.pem
+          eval $(ssh-agent -s)
+          ssh-add deploy_key.pem
+        shell: bash
+
+      - name: Add EC2 Host to Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
+
+      - name: Deploy Application
+        run: |
+          rsync -avz --exclude-from='.scpignore' -e "ssh -i deploy_key.pem" cherryshades/ $EC2_USER@$EC2_HOST:/home/ubuntu/cherryshades/
+          ssh -i deploy_key.pem $EC2_USER@$EC2_HOST <<-EOF
+            cd /home/ubuntu/cherryshades/backend
+            echo "NODE_ENV=${NODE_ENV}" > .env
+            echo "PORT=${PORT}" >> .env
+            echo "MONGO_URI=${MONGO_URI}" >> .env
+            echo "JWT_SECRET=${JWT_SECRET}" >> .env
+            npm ci
+            pm2 stop ${PM2_NAME} || true
+            pm2 delete ${PM2_NAME} || true
+            pm2 start /home/ubuntu/cherryshades/backend/server.js --name ${PM2_NAME}
+          EOF
+        shell: bash
 
     env:
       SSH_KEY: ${{ secrets.SSH_KEY }}
