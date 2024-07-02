@@ -33,6 +33,11 @@ jobs:
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "echo 'SSH connection successful!'"
       shell: bash
 
+    - name: Remove Existing Directory on EC2
+      run: |
+        ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "rm -rf /home/ubuntu/cherryshades-test"
+      shell: bash
+
     - name: Clone Repository on EC2
       run: |
         ssh -i deploy_key.pem $EC2_USER@$EC2_HOST "git clone https://github.com/Manjunath-Gowdar/cherryshades-test.git /home/ubuntu/cherryshades-test"
